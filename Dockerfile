@@ -13,4 +13,3 @@ RUN mv build/libs/*.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
-RUN gradle build --no-daemon -x test --stacktrace
