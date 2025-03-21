@@ -13,8 +13,8 @@ RUN rm -rf ~/.gradle/caches
 # 5. Gradle 빌드 (테스트 제외)
 RUN gradle build --no-daemon -x test
 
-# 6. 빌드된 JAR 파일을 app.jar로 이동
-RUN mv build/libs/*.jar app.jar
+# 6. 빌드된 JAR 파일을 app.jar로 이동 (확인된 JAR 파일 경로를 사용)
+RUN mv build/libs/*-all.jar app.jar
 
 # 7. 애플리케이션 실행을 위한 ENTRYPOINT 설정
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
