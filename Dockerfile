@@ -1,13 +1,16 @@
-# 빌드 스테이지
-FROM gradle:7.6.1-jdk17 AS build
+FROM gradle:7.6-jdk17 AS build
+
 WORKDIR /app
 COPY . .
-RUN gradle build --no-daemon -x test && \
-    mv build/libs/*.jar app.jar
 
-# 실행 스테이지
-FROM openjdk:17-slim
-WORKDIR /app
-COPY --from=build /app/app.jar app.jar
-EXPOSE 8080
-CMD ["java", "-jar", "app.jar"]
+# Gradle 캐시 삭제
+RUN rm -rf ~/.gradle/caches
+
+# Gradle 빌드
+RUN gradle build --no-daemon -x test
+
+RUN mv build/libs/*.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
+RUN gradle build --no-daemon -x test --stacktrace
