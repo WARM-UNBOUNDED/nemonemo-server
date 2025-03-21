@@ -1,7 +1,5 @@
-version: '3'
 services:
-  jwt-app:
-    build: .
+  app:
+    image: ${DOCKER_USERNAME}/jwt-app:latest
     ports:
-      - "8080:8080"
-    restart: always
+      - "8081:8081"
