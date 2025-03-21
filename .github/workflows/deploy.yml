@@ -34,6 +34,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/jwt-app:latest
-            docker-compose -f ~/jwt/docker-compose.yml down
-            docker-compose -f ~/jwt/docker-compose.yml up -d
+            docker pull ${{ secrets.DOCKER_USERNAME }}/sns-app:latest
+            docker-compose -f ~/sns/docker-compose.yml down
+            docker-compose -f ~/sns/docker-compose.yml up -d
+    
