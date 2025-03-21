@@ -1,4 +1,4 @@
-# 1. Gradle 빌드 환경 설정
+# 1. Gradle 기반으로 빌드 환경 설정
 FROM gradle:7.6-jdk17 AS build
 
 # 2. 작업 디렉토리 설정
@@ -13,8 +13,9 @@ RUN rm -rf ~/.gradle/caches
 # 5. Gradle 빌드 (테스트 제외)
 RUN gradle build --no-daemon -x test
 
-# 6. 빌드된 JAR 파일을 app.jar로 이동 (확인된 JAR 파일 경로를 사용)
-RUN mv build/libs/*-all.jar app.jar
+# 6. 빌드된 JAR 파일을 app.jar로 이동
+# 'sns-server-0.0.1-SNAPSHOT.jar'로 설정하여 JAR 파일을 app.jar로 이동
+RUN mv build/libs/sns-server-0.0.1-SNAPSHOT.jar app.jar
 
 # 7. 애플리케이션 실행을 위한 ENTRYPOINT 설정
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
