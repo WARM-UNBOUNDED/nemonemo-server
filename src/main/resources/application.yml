@@ -33,3 +33,11 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  packages-to-scan: com.example.snsserver.domain.controller.AuthController, com.example.snsserver.domain.controller.MemberController
