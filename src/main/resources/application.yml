@@ -40,4 +40,4 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-  packages-to-scan: com.example.snsserver.domain.controller.AuthController, com.example.snsserver.domain.controller.MemberController
+  packages-to-scan: com.example.snsserver.domain.controller
