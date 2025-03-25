@@ -29,4 +29,10 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("유저 정보가 없습니다."));
         return new MemberResponseDto(member);
     }
+
+    @Transactional(readOnly = true)
+    public Member getMemberByUsername(String username) {
+        return memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("유저 정보가 없습니다."));
+    }
 }
