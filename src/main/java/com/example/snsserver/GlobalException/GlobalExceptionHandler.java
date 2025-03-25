@@ -1,6 +1,6 @@
 package com.example.snsserver.GlobalException;
 
-import com.example.snsserver.domain.dto.ErrorResponse;
+import com.example.snsserver.dto.common.response.ErrorResponse;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
