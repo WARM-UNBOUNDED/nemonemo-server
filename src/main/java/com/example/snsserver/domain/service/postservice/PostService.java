@@ -36,7 +36,7 @@ public class PostService {
     private String uploadDir;
 
     @Transactional
-    public PostResponseDto createPost(PostRequestDto requestDto, MultipartFile file) throws IOException {
+    public PostResponseDto createPost(PostRequestDto requestDto, MultipartFile file) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberService.getMemberByUsername(username);
         if (member == null) {
@@ -47,17 +47,25 @@ public class PostService {
         if (!dir.exists()) {
             boolean created = dir.mkdirs();
             if (!created) {
-                throw new IOException("Failed to create directory: " + uploadDir);
+                log.error("Failed to create directory: {}", uploadDir);
+                throw new IllegalStateException("Failed to create upload directory: " + uploadDir);
             }
         }
 
         String filePath = null;
         if (file != null && !file.isEmpty()) {
-            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            File destFile = new File(dir, fileName);
-            log.info("Saving file to: {}", destFile.getAbsolutePath());
-            file.transferTo(destFile);
-            filePath = destFile.getAbsolutePath();
+            try {
+                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                File destFile = new File(dir, fileName);
+                log.info("Saving file to: {}", destFile.getAbsolutePath());
+                file.transferTo(destFile);
+                filePath = destFile.getAbsolutePath();
+            } catch (IOException e) {
+                log.error("Failed to save file: {}", e.getMessage(), e);
+                throw new IllegalStateException("File upload failed: " + e.getMessage(), e);
+            }
+        } else if (file != null) {
+            log.warn("Received empty file from request");
         }
 
         Post post = Post.builder()
@@ -87,7 +95,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDto updatePost(Long postId, PostRequestDto requestDto, MultipartFile file) throws IOException {
+    public PostResponseDto updatePost(Long postId, PostRequestDto requestDto, MultipartFile file) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
@@ -102,14 +110,22 @@ public class PostService {
             if (!dir.exists()) {
                 boolean created = dir.mkdirs();
                 if (!created) {
-                    throw new IOException("Failed to create directory: " + uploadDir);
+                    log.error("Failed to create directory: {}", uploadDir);
+                    throw new IllegalStateException("Failed to create upload directory: " + uploadDir);
                 }
             }
-            String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-            File destFile = new File(dir, fileName);
-            log.info("Updating file to: {}", destFile.getAbsolutePath());
-            file.transferTo(destFile);
-            filePath = destFile.getAbsolutePath();
+            try {
+                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+                File destFile = new File(dir, fileName);
+                log.info("Updating file to: {}", destFile.getAbsolutePath());
+                file.transferTo(destFile);
+                filePath = destFile.getAbsolutePath();
+            } catch (IOException e) {
+                log.error("Failed to update file: {}", e.getMessage(), e);
+                throw new IllegalStateException("File update failed: " + e.getMessage(), e);
+            }
+        } else if (file != null) {
+            log.warn("Received empty file from request");
         }
 
         post = post.toBuilder()
