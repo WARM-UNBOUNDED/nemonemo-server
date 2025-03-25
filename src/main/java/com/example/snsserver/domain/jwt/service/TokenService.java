@@ -80,14 +80,22 @@ public class TokenService {
             throw new TokenValidationException("권한 정보가 없는 토큰입니다.");
         }
 
+        String authoritiesString = claims.get(TokenConstants.AUTHORITIES_KEY).toString();
+        log.info("Authorities from token: {}", authoritiesString);
+
         Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(TokenConstants.AUTHORITIES_KEY).toString().split(","))
+                Arrays.stream(authoritiesString.split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
+        log.info("Granted authorities: {}", authorities);
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+        log.info("Loaded UserDetails: username={}, authorities={}", userDetails.getUsername(), userDetails.getAuthorities());
 
-        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
+        log.info("Created Authentication: principal={}, authorities={}", authentication.getPrincipal(), authentication.getAuthorities());
+
+        return authentication;
     }
 
     public boolean validateToken(String token) {
