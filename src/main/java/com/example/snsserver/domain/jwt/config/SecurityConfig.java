@@ -2,6 +2,7 @@ package com.example.snsserver.domain.jwt.config;
 
 import com.example.snsserver.domain.jwt.security.JWTFilter;
 import com.example.snsserver.domain.jwt.service.TokenService;
+import com.example.snsserver.domain.jwt.token.JwtTokenManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,14 +28,13 @@ import java.util.List;
 public class SecurityConfig {
 
     private final TokenService tokenService;
+    private final JwtTokenManager jwtTokenManager;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        JWTFilter jwtFilter = new JWTFilter(tokenService);
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JWTFilter jwtFilter) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 추가
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
@@ -42,6 +42,11 @@ public class SecurityConfig {
                             .requestMatchers("/api/auth/**").permitAll()
                             .requestMatchers("/swagger-ui/**").permitAll()
                             .requestMatchers("/v3/api-docs/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/posts/**").hasRole("USER")
+                            .requestMatchers(HttpMethod.POST, "/api/comments/**").hasRole("USER")
+                            .requestMatchers(HttpMethod.POST, "/api/likes/**").hasRole("USER") // 추가
                             .anyRequest().authenticated();
                 })
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
@@ -49,17 +54,24 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JWTFilter jwtFilter() {
+        return new JWTFilter(jwtTokenManager, tokenService);
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*")); // ✅ 모든 도메인 허용
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
