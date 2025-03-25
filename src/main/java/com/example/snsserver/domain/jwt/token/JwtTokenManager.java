@@ -17,6 +17,7 @@ public class JwtTokenManager implements TokenGenerator, TokenValidator {
     private final Key key;
 
     public JwtTokenManager(@Value("${jwt.secret}") String secretKey) {
+        log.info("Initializing JwtTokenManager with secret key: {}", secretKey);
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -50,10 +51,12 @@ public class JwtTokenManager implements TokenGenerator, TokenValidator {
     @Override
     public boolean validateToken(String token) {
         try {
+            log.info("Validating token: {}", token);
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            log.info("Token validated successfully");
             return true;
         } catch (JwtException e) {
-            log.error("JWT validation failed", e);
+            log.error("JWT validation failed: {}", e.getMessage(), e);
             return false;
         }
     }
