@@ -4,11 +4,15 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: admin
     password: Amgfaa289
-
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true
@@ -24,6 +28,7 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type: trace
     com.example.snsserver: debug
+    org.springframework.security: DEBUG
 
 server:
   port: 8081
@@ -42,3 +47,5 @@ springdoc:
     enabled: true
   packages-to-scan: com.example.snsserver.domain.controller
 
+file:
+  upload-dir: /Users/kmj1110/uploads
