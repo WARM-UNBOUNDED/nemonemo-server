@@ -34,7 +34,6 @@ public class AuthService {
         }
 
         Member member = Member.builder()
-                .name(requestDto.getName())
                 .password(passwordEncoder.encode(requestDto.getPassword()))
                 .username(requestDto.getUsername())
                 .authority(requestDto.getAuthority())
