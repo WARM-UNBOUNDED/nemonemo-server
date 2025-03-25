@@ -1,8 +1,8 @@
 package com.example.snsserver.domain.service;
 
-import com.example.snsserver.application.repository.MemberRepository;
-import com.example.snsserver.domain.domain.Member;
-import com.example.snsserver.domain.dto.MemberResponseDto;
+import com.example.snsserver.domain.auth.repository.MemberRepository;
+import com.example.snsserver.domain.auth.entity.Member;
+import com.example.snsserver.dto.auth.response.MemberResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
