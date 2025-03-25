@@ -36,16 +36,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex, WebRequest request) {
-        logger.error("Unsupported media type: {}. Request headers: {}. Request parts: {}",
-                ex.getMessage(), request.getHeader("Content-Type"), request.getParameterMap());
+        String contentType = request.getHeader("Content-Type");
+        logger.error("Unsupported media type - Received: {}, Expected: multipart/form-data, Parts: {}",
+                contentType, request.getParameterMap());
         ErrorResponse errorResponse = new ErrorResponse(
                 "Unsupported media type",
-                ex.getMessage() + ". Expected Content-Type: multipart/form-data",
+                "Received Content-Type: " + contentType + ". Expected: multipart/form-data with valid 'post' (JSON) and 'file' parts",
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE.value()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
-
     @ExceptionHandler(IOException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponse> handleIOException(IOException ex, WebRequest request) {
@@ -58,16 +58,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        logger.error("Invalid argument: {}", ex.getMessage());
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex, WebRequest request) {
+        logger.error("Internal error: {}", ex.getMessage(), ex);
         ErrorResponse errorResponse = new ErrorResponse(
-                "Invalid argument",
+                "Internal server error",
                 ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value()
+                HttpStatus.INTERNAL_SERVER_ERROR.value()
         );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(SecurityException.class)
