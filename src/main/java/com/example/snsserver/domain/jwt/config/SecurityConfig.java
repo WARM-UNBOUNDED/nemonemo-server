@@ -37,18 +37,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> {
-                    auth
-                            .requestMatchers("/api/auth/**").permitAll()
-                            .requestMatchers("/swagger-ui/**").permitAll()
-                            .requestMatchers("/v3/api-docs/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-                            .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
-                            .requestMatchers(HttpMethod.POST, "/api/posts/**").hasRole("USER")
-                            .requestMatchers(HttpMethod.POST, "/api/comments/**").hasRole("USER")
-                            .requestMatchers(HttpMethod.POST, "/api/likes/**").hasRole("USER") // 추가
-                            .anyRequest().authenticated();
-                })
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**", "/api/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/**", "/api/comments/**", "/api/likes/**").hasRole("USER")
+                        .anyRequest().authenticated()
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
