@@ -22,3 +22,5 @@ ENTRYPOINT ["java", "-jar", "/app/app.jar"]
 
 # 8. 애플리케이션이 사용할 포트 열기
 EXPOSE 8081
+
+RUN gradle build --no-daemon -x test --stacktrace --info
