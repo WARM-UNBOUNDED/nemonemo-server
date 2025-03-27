@@ -61,12 +61,12 @@ public class FollowService {
     }
 
     @Transactional(readOnly = true)
-    public List<FollowListResponseDto> getFollowingList(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + memberId));
+    public List<FollowListResponseDto> getFollowingList(Long Id) {
+        Member member = memberRepository.findById(Id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + Id));
         return member.getFollowingList().stream()
                 .map(follow -> FollowListResponseDto.builder()
-                        .memberId(follow.getFollowing().getId())
+                        .Id(follow.getFollowing().getId())
                         .username(follow.getFollowing().getUsername())
                         .name(follow.getFollowing().getName())
                         .build())
@@ -74,12 +74,12 @@ public class FollowService {
     }
 
     @Transactional(readOnly = true)
-    public List<FollowListResponseDto> getFollowerList(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + memberId));
+    public List<FollowListResponseDto> getFollowerList(Long Id) {
+        Member member = memberRepository.findById(Id)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + Id));
         return member.getFollowerList().stream()
                 .map(follow -> FollowListResponseDto.builder()
-                        .memberId(follow.getFollower().getId())
+                        .Id(follow.getFollower().getId())
                         .username(follow.getFollower().getUsername())
                         .name(follow.getFollower().getName())
                         .build())

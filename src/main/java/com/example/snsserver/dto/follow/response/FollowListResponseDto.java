@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class FollowListResponseDto {
-    private Long memberId;
+    private Long Id;
     private String username;
     private String name;
 }
