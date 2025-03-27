@@ -1,7 +1,7 @@
 package com.example.snsserver.controller;
 
 import com.example.snsserver.dto.auth.response.MemberResponseDto;
-import com.example.snsserver.domain.service.MemberService;
+import com.example.snsserver.domain.auth.service.MemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

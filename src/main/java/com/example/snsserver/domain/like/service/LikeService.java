@@ -6,7 +6,7 @@ import com.example.snsserver.domain.like.entity.Like;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.post.entity.Post;
 import com.example.snsserver.dto.like.response.LikeResponseDto;
-import com.example.snsserver.domain.service.MemberService;
+import com.example.snsserver.domain.auth.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
