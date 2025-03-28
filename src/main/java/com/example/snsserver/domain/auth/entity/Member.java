@@ -34,6 +34,9 @@ public class Member {
     @Column(nullable = false)
     private Authority authority;
 
+    @Column
+    private String profileImagePath;
+
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Follow> followingList = new ArrayList<>();
@@ -41,4 +44,8 @@ public class Member {
     @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Follow> followerList = new ArrayList<>();
+
+    public void updateProfileImage(String profileImagePath) {
+        this.profileImagePath = profileImagePath;
+    }
 }
