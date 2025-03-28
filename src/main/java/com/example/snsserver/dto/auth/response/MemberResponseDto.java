@@ -8,10 +8,12 @@ public class MemberResponseDto {
     private Long id;
     private String username;
     private String authority;
+    private String profileImagePath;
 
     public MemberResponseDto(Member member) {
         this.id = member.getId();
         this.username = member.getUsername();
         this.authority = member.getAuthority() != null ? member.getAuthority().name() : null;
+        this.profileImagePath = member.getProfileImagePath();
     }
 }
