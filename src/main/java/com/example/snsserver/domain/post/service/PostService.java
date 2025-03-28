@@ -1,5 +1,6 @@
 package com.example.snsserver.domain.post.service;
 
+import com.example.snsserver.common.service.BaseImageService;
 import com.example.snsserver.domain.like.repository.LikeRepository;
 import com.example.snsserver.domain.post.repository.PostRepository;
 import com.example.snsserver.domain.auth.entity.Member;
@@ -10,30 +11,23 @@ import com.example.snsserver.domain.auth.service.MemberService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PostService {
+public class PostService extends BaseImageService {
 
     private final PostRepository postRepository;
     private final MemberService memberService;
     private final LikeRepository likeRepository;
-
-    @Value("${file.upload-dir:/uploads}")
-    private String uploadDir;
 
     @Transactional
     public PostResponseDto createPost(PostRequestDto requestDto, MultipartFile file) {
@@ -43,30 +37,7 @@ public class PostService {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username);
         }
 
-        File dir = new File(uploadDir);
-        if (!dir.exists()) {
-            boolean created = dir.mkdirs();
-            if (!created) {
-                log.error("Failed to create directory: {}", uploadDir);
-                throw new IllegalStateException("Failed to create upload directory: " + uploadDir);
-            }
-        }
-
-        String filePath = null;
-        if (file != null && !file.isEmpty()) {
-            try {
-                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                File destFile = new File(dir, fileName);
-                log.info("Saving file to: {}", destFile.getAbsolutePath());
-                file.transferTo(destFile);
-                filePath = destFile.getAbsolutePath();
-            } catch (IOException e) {
-                log.error("Failed to save file: {}", e.getMessage(), e);
-                throw new IllegalStateException("File upload failed: " + e.getMessage(), e);
-            }
-        } else if (file != null) {
-            log.warn("Received empty file from request");
-        }
+        String filePath = uploadImage(file, "post");
 
         Post post = Post.builder()
                 .title(requestDto.getTitle())
@@ -106,26 +77,8 @@ public class PostService {
 
         String filePath = post.getFilePath();
         if (file != null && !file.isEmpty()) {
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                boolean created = dir.mkdirs();
-                if (!created) {
-                    log.error("Failed to create directory: {}", uploadDir);
-                    throw new IllegalStateException("Failed to create upload directory: " + uploadDir);
-                }
-            }
-            try {
-                String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
-                File destFile = new File(dir, fileName);
-                log.info("Updating file to: {}", destFile.getAbsolutePath());
-                file.transferTo(destFile);
-                filePath = destFile.getAbsolutePath();
-            } catch (IOException e) {
-                log.error("Failed to update file: {}", e.getMessage(), e);
-                throw new IllegalStateException("File update failed: " + e.getMessage(), e);
-            }
-        } else if (file != null) {
-            log.warn("Received empty file from request");
+            deleteImage(filePath);
+            filePath = uploadImage(file, "post");
         }
 
         post = post.toBuilder()
@@ -148,16 +101,7 @@ public class PostService {
             throw new SecurityException("본인의 게시물만 삭제할 수 있습니다.");
         }
 
-        if (post.getFilePath() != null) {
-            File file = new File(post.getFilePath());
-            if (file.exists()) {
-                boolean deleted = file.delete();
-                if (!deleted) {
-                    log.warn("Failed to delete file: {}", post.getFilePath());
-                }
-            }
-        }
-
+        deleteImage(post.getFilePath());
         postRepository.delete(post);
     }
 
@@ -169,7 +113,7 @@ public class PostService {
                 .filePath(post.getFilePath())
                 .username(post.getMember().getUsername())
                 .createdAt(post.getCreatedAt())
-                .likeCount(likeRepository.countByPostId(post.getId())) // 수정
+                .likeCount(likeRepository.countByPostId(post.getId()))
                 .commentCount(post.getComments() != null ? post.getComments().size() : 0)
                 .build();
     }
