@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class LikeResponseDto {
-    private Long postId; // 추가
+    private Long postId;
     private boolean liked;
     private long likeCount;
 }
