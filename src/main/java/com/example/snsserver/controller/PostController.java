@@ -1,9 +1,12 @@
 package com.example.snsserver.controller;
 
 import com.example.snsserver.dto.post.request.PostRequestDto;
+import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
+import com.example.snsserver.dto.post.response.SearchPostResponseDto;
 import com.example.snsserver.domain.post.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -99,6 +102,20 @@ public class PostController {
     )
     public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postId) {
         return ResponseEntity.ok(postService.getPost(postId));
+    }
+
+    @GetMapping("/search")
+    @Operation(
+            summary = "타이틀 검색",
+            description = "게시물 타이틀로 검색합니다. 페이지네이션 지원 (기본값: page=0, size=10).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "검색 결과 반환", content = @Content(schema = @Schema(implementation = SearchPostResponseDto.class))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")
+            }
+    )
+    public ResponseEntity<SearchPostResponseDto> searchPosts(
+            @Valid @ModelAttribute SearchPostRequestDto requestDto) {
+        return ResponseEntity.ok(postService.searchPosts(requestDto));
     }
 
     @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
