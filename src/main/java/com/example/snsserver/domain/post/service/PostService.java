@@ -1,16 +1,23 @@
 package com.example.snsserver.domain.post.service;
 
 import com.example.snsserver.common.service.BaseImageService;
+import com.example.snsserver.common.service.SearchUtils;
 import com.example.snsserver.domain.like.repository.LikeRepository;
 import com.example.snsserver.domain.post.repository.PostRepository;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.post.entity.Post;
 import com.example.snsserver.dto.post.request.PostRequestDto;
+import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
+import com.example.snsserver.dto.post.response.SearchPostResponseDto;
 import com.example.snsserver.domain.auth.service.MemberService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +70,23 @@ public class PostService extends BaseImageService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
         return mapToResponseDto(post);
+    }
+
+    @Transactional(readOnly = true)
+    public SearchPostResponseDto searchPosts(SearchPostRequestDto requestDto) {
+        log.info("Searching posts with keyword: {}, page: {}, size: {}",
+                requestDto.getKeyword(), requestDto.getPage(), requestDto.getSize());
+
+        Pageable pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize());
+
+        Specification<Post> spec = SearchUtils.buildTitleSearchSpecification(requestDto.getKeyword());
+
+        Page<Post> postPage = postRepository.findAll(spec, pageable);
+
+        Page<PostResponseDto> postResponsePage = postPage.map(this::mapToResponseDto);
+
+        log.info("Found {} posts matching keyword: {}", postResponsePage.getTotalElements(), requestDto.getKeyword());
+        return SearchPostResponseDto.from(postResponsePage);
     }
 
     @Transactional
