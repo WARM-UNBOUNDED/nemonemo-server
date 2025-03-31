@@ -2,6 +2,7 @@ package com.example.snsserver.controller;
 
 import com.example.snsserver.dto.follow.response.FollowListResponseDto;
 import com.example.snsserver.dto.follow.response.FollowResponseDto;
+import com.example.snsserver.dto.follow.response.FollowCountResponseDto;
 import com.example.snsserver.domain.follow.service.FollowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -104,5 +105,37 @@ public class FollowController {
     ) {
         List<FollowListResponseDto> followerList = followService.getFollowerList(memberId);
         return ResponseEntity.ok(followerList);
+    }
+
+    @GetMapping("/my/count")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+            summary = "내 팔로잉/팔로워 수 조회",
+            description = "현재 사용자의 팔로잉 수와 팔로워 수를 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "팔로잉/팔로워 수 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
+    public ResponseEntity<FollowCountResponseDto> getMyFollowCount() {
+        FollowCountResponseDto response = followService.getMyFollowCount();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{memberId}/count")
+    @Operation(
+            summary = "특정 사용자의 팔로잉/팔로워 수 조회",
+            description = "특정 사용자의 팔로잉 수와 팔로워 수를 조회합니다. 인증 없이 접근 가능합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "팔로잉/팔로워 수 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "존재하지 않는 사용자")
+    })
+    public ResponseEntity<FollowCountResponseDto> getFollowCount(
+            @Parameter(description = "조회할 사용자의 ID", required = true, example = "1")
+            @PathVariable Long memberId
+    ) {
+        FollowCountResponseDto response = followService.getFollowCount(memberId);
+        return ResponseEntity.ok(response);
     }
 }
