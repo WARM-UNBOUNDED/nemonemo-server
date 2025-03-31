@@ -6,6 +6,7 @@ import com.example.snsserver.domain.follow.entity.Follow;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.dto.follow.response.FollowListResponseDto;
 import com.example.snsserver.dto.follow.response.FollowResponseDto;
+import com.example.snsserver.dto.follow.response.FollowCountResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -100,5 +101,26 @@ public class FollowService {
         Member member = memberRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username));
         return getFollowerList(member.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public FollowCountResponseDto getMyFollowCount() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username));
+        return getFollowCount(member.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public FollowCountResponseDto getFollowCount(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + memberId));
+        long followingCount = member.getFollowingList().size();
+        long followerCount = member.getFollowerList().size();
+        log.info("Follow count for user {}: following={}, followers={}", member.getUsername(), followingCount, followerCount);
+        return FollowCountResponseDto.builder()
+                .followingCount(followingCount)
+                .followerCount(followerCount)
+                .build();
     }
 }
