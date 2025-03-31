@@ -2,9 +2,7 @@ package com.example.snsserver.domain.post.repository;
 
 import com.example.snsserver.domain.post.entity.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.List;
-
-public interface PostRepository extends JpaRepository<Post, Long> {
-    List<Post> findByMemberUsername(String username);
+public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
 }
