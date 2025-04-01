@@ -6,6 +6,8 @@ import com.example.snsserver.domain.like.repository.LikeRepository;
 import com.example.snsserver.domain.post.repository.PostRepository;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.post.entity.Post;
+import com.example.snsserver.dto.auth.request.PageRequestDto;
+import com.example.snsserver.dto.auth.response.PagedResponseDto;
 import com.example.snsserver.dto.post.request.PostRequestDto;
 import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
@@ -16,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,8 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -59,10 +59,13 @@ public class PostService extends BaseImageService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponseDto> getAllPosts() {
-        return postRepository.findAll().stream()
-                .map(this::mapToResponseDto)
-                .collect(Collectors.toList());
+    public PagedResponseDto<PostResponseDto> getAllPosts(PageRequestDto pageRequestDto) {
+        Page<Post> postPage = postRepository.findAll(
+                pageRequestDto.toPageableWithSort("createdAt", Sort.Direction.DESC));
+        Page<PostResponseDto> postResponsePage = postPage.map(this::mapToResponseDto);
+
+        log.info("Fetched {} posts", postResponsePage.getTotalElements());
+        return PagedResponseDto.from(postResponsePage);
     }
 
     @Transactional(readOnly = true)
@@ -77,7 +80,8 @@ public class PostService extends BaseImageService {
         log.info("Searching posts with keyword: {}, page: {}, size: {}",
                 requestDto.getKeyword(), requestDto.getPage(), requestDto.getSize());
 
-        Pageable pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize());
+        PageRequest pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<Post> spec = SearchUtils.buildTitleSearchSpecification(requestDto.getKeyword());
 
