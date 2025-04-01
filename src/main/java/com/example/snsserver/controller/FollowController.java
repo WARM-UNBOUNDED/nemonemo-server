@@ -1,5 +1,7 @@
 package com.example.snsserver.controller;
 
+import com.example.snsserver.dto.auth.request.PageRequestDto;
+import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.follow.response.FollowListResponseDto;
 import com.example.snsserver.dto.follow.response.FollowResponseDto;
 import com.example.snsserver.dto.follow.response.FollowCountResponseDto;
@@ -14,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/follows")
 @RequiredArgsConstructor
@@ -26,93 +26,76 @@ public class FollowController {
 
     @PostMapping("/{followingId}")
     @PreAuthorize("isAuthenticated()")
-    @Operation(
-            summary = "팔로우/언팔로우 토글",
-            description = "사용자를 팔로우하거나 언팔로우합니다. 이미 팔로우한 경우 언팔로우로 동작합니다."
-    )
+    @Operation(summary = "팔로우/언팔로우 토글", description = "사용자를 팔로우하거나 언팔로우합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로우/언팔로우 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청 (자기 자신 팔로우 시도, 존재하지 않는 사용자 등)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
     public ResponseEntity<FollowResponseDto> toggleFollow(
             @Parameter(description = "팔로우할 사용자의 ID", required = true, example = "2")
-            @PathVariable Long followingId
-    ) {
+            @PathVariable Long followingId) {
         FollowResponseDto response = followService.toggleFollow(followingId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/my/following")
     @PreAuthorize("isAuthenticated()")
-    @Operation(
-            summary = "내 팔로잉 목록 조회",
-            description = "현재 사용자가 팔로우하는 사용자 목록을 조회합니다."
-    )
+    @Operation(summary = "내 팔로잉 목록 조회", description = "현재 사용자가 팔로우하는 사용자 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로잉 목록 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    public ResponseEntity<List<FollowListResponseDto>> getMyFollowingList() {
-        List<FollowListResponseDto> followingList = followService.getMyFollowingList();
-        return ResponseEntity.ok(followingList);
+    public ResponseEntity<PageResponseDto<FollowListResponseDto>> getMyFollowingList(
+            @Parameter(description = "페이지 요청 정보 (page, size)", required = true)
+            @ModelAttribute PageRequestDto pageRequestDto) {
+        return ResponseEntity.ok(followService.getMyFollowingList(pageRequestDto));
     }
 
     @GetMapping("/my/followers")
     @PreAuthorize("isAuthenticated()")
-    @Operation(
-            summary = "내 팔로워 목록 조회",
-            description = "현재 사용자를 팔로우하는 사용자 목록을 조회합니다."
-    )
+    @Operation(summary = "내 팔로워 목록 조회", description = "현재 사용자를 팔로우하는 사용자 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로워 목록 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
     })
-    public ResponseEntity<List<FollowListResponseDto>> getMyFollowerList() {
-        List<FollowListResponseDto> followerList = followService.getMyFollowerList();
-        return ResponseEntity.ok(followerList);
+    public ResponseEntity<PageResponseDto<FollowListResponseDto>> getMyFollowerList(
+            @Parameter(description = "페이지 요청 정보 (page, size)", required = true)
+            @ModelAttribute PageRequestDto pageRequestDto) {
+        return ResponseEntity.ok(followService.getMyFollowerList(pageRequestDto));
     }
 
-    @GetMapping("/{memberId}/following")
-    @Operation(
-            summary = "특정 사용자의 팔로잉 목록 조회",
-            description = "특정 사용자가 팔로우하는 사용자 목록을 조회합니다. 인증 없이 접근 가능합니다."
-    )
+    @GetMapping("/{username}/following")
+    @Operation(summary = "특정 사용자의 팔로잉 목록 조회", description = "특정 사용자가 팔로우하는 사용자 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로잉 목록 조회 성공"),
             @ApiResponse(responseCode = "400", description = "존재하지 않는 사용자")
     })
-    public ResponseEntity<List<FollowListResponseDto>> getFollowingList(
-            @Parameter(description = "조회할 사용자의 ID", required = true, example = "1")
-            @PathVariable Long memberId
-    ) {
-        List<FollowListResponseDto> followingList = followService.getFollowingList(memberId);
-        return ResponseEntity.ok(followingList);
+    public ResponseEntity<PageResponseDto<FollowListResponseDto>> getFollowingList(
+            @Parameter(description = "조회할 사용자의 username", required = true, example = "Test")
+            @PathVariable String username,
+            @Parameter(description = "페이지 요청 정보 (page, size)", required = true)
+            @ModelAttribute PageRequestDto pageRequestDto) {
+        return ResponseEntity.ok(followService.getFollowingList(username, pageRequestDto));
     }
 
-    @GetMapping("/{memberId}/followers")
-    @Operation(
-            summary = "특정 사용자의 팔로워 목록 조회",
-            description = "특정 사용자를 팔로우하는 사용자 목록을 조회합니다. 인증 없이 접근 가능합니다."
-    )
+    @GetMapping("/{username}/followers")
+    @Operation(summary = "특정 사용자의 팔로워 목록 조회", description = "특정 사용자를 팔로우하는 사용자 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로워 목록 조회 성공"),
             @ApiResponse(responseCode = "400", description = "존재하지 않는 사용자")
     })
-    public ResponseEntity<List<FollowListResponseDto>> getFollowerList(
-            @Parameter(description = "조회할 사용자의 ID", required = true, example = "1")
-            @PathVariable Long memberId
-    ) {
-        List<FollowListResponseDto> followerList = followService.getFollowerList(memberId);
-        return ResponseEntity.ok(followerList);
+    public ResponseEntity<PageResponseDto<FollowListResponseDto>> getFollowerList(
+            @Parameter(description = "조회할 사용자의 username", required = true, example = "Test")
+            @PathVariable String username,
+            @Parameter(description = "페이지 요청 정보 (page, size)", required = true)
+            @ModelAttribute PageRequestDto pageRequestDto) {
+        return ResponseEntity.ok(followService.getFollowerList(username, pageRequestDto));
     }
 
     @GetMapping("/my/count")
     @PreAuthorize("isAuthenticated()")
-    @Operation(
-            summary = "내 팔로잉/팔로워 수 조회",
-            description = "현재 사용자의 팔로잉 수와 팔로워 수를 조회합니다."
-    )
+    @Operation(summary = "내 팔로잉/팔로워 수 조회", description = "현재 사용자의 팔로잉 수와 팔로워 수를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로잉/팔로워 수 조회 성공"),
             @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
@@ -122,20 +105,16 @@ public class FollowController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{memberId}/count")
-    @Operation(
-            summary = "특정 사용자의 팔로잉/팔로워 수 조회",
-            description = "특정 사용자의 팔로잉 수와 팔로워 수를 조회합니다. 인증 없이 접근 가능합니다."
-    )
+    @GetMapping("/{username}/count")
+    @Operation(summary = "특정 사용자의 팔로잉/팔로워 수 조회", description = "특정 사용자의 팔로잉 수와 팔로워 수를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "팔로잉/팔로워 수 조회 성공"),
             @ApiResponse(responseCode = "400", description = "존재하지 않는 사용자")
     })
     public ResponseEntity<FollowCountResponseDto> getFollowCount(
-            @Parameter(description = "조회할 사용자의 ID", required = true, example = "1")
-            @PathVariable Long memberId
-    ) {
-        FollowCountResponseDto response = followService.getFollowCount(memberId);
+            @Parameter(description = "조회할 사용자의 username", required = true, example = "Test")
+            @PathVariable String username) {
+        FollowCountResponseDto response = followService.getFollowCount(username);
         return ResponseEntity.ok(response);
     }
 }
