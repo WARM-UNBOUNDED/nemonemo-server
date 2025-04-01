@@ -1,5 +1,7 @@
 package com.example.snsserver.controller;
 
+import com.example.snsserver.dto.auth.request.PageRequestDto;
+import com.example.snsserver.dto.auth.response.PagedResponseDto;
 import com.example.snsserver.dto.post.request.PostRequestDto;
 import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
@@ -20,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -82,13 +83,15 @@ public class PostController {
     @GetMapping
     @Operation(
             summary = "모든 게시물 조회",
-            description = "모든 게시물을 조회합니다.",
+            description = "모든 게시물을 페이지 단위로 조회합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "게시물 목록 반환", content = @Content(schema = @Schema(implementation = PostResponseDto.class)))
+                    @ApiResponse(responseCode = "200", description = "게시물 목록 반환", content = @Content(schema = @Schema(implementation = PagedResponseDto.class)))
             }
     )
-    public ResponseEntity<List<PostResponseDto>> getAllPosts() {
-        return ResponseEntity.ok(postService.getAllPosts());
+    public ResponseEntity<PagedResponseDto<PostResponseDto>> getAllPosts(
+            @Parameter(description = "페이지 요청 정보 (page, size)", required = true)
+            @ModelAttribute PageRequestDto pageRequestDto) {
+        return ResponseEntity.ok(postService.getAllPosts(pageRequestDto));
     }
 
     @GetMapping("/{postId}")
@@ -100,7 +103,9 @@ public class PostController {
                     @ApiResponse(responseCode = "404", description = "게시물 없음")
             }
     )
-    public ResponseEntity<PostResponseDto> getPost(@PathVariable Long postId) {
+    public ResponseEntity<PostResponseDto> getPost(
+            @Parameter(description = "조회할 게시물 ID", required = true, example = "1")
+            @PathVariable Long postId) {
         return ResponseEntity.ok(postService.getPost(postId));
     }
 
@@ -175,7 +180,9 @@ public class PostController {
                     @ApiResponse(responseCode = "404", description = "게시물 없음")
             }
     )
-    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
+    public ResponseEntity<Void> deletePost(
+            @Parameter(description = "삭제할 게시물 ID", required = true, example = "1")
+            @PathVariable Long postId) {
         postService.deletePost(postId);
         return ResponseEntity.noContent().build();
     }
