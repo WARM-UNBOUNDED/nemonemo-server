@@ -1,7 +1,7 @@
 package com.example.snsserver.controller;
 
 import com.example.snsserver.dto.auth.request.PageRequestDto;
-import com.example.snsserver.dto.auth.response.PagedResponseDto;
+import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.post.request.PostRequestDto;
 import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
@@ -85,10 +85,10 @@ public class PostController {
             summary = "모든 게시물 조회",
             description = "모든 게시물을 페이지 단위로 조회합니다.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "게시물 목록 반환", content = @Content(schema = @Schema(implementation = PagedResponseDto.class)))
+                    @ApiResponse(responseCode = "200", description = "게시물 목록 반환", content = @Content(schema = @Schema(implementation = PageResponseDto.class)))
             }
     )
-    public ResponseEntity<PagedResponseDto<PostResponseDto>> getAllPosts(
+    public ResponseEntity<PageResponseDto<PostResponseDto>> getAllPosts(
             @Parameter(description = "페이지 요청 정보 (page, size)", required = true)
             @ModelAttribute PageRequestDto pageRequestDto) {
         return ResponseEntity.ok(postService.getAllPosts(pageRequestDto));

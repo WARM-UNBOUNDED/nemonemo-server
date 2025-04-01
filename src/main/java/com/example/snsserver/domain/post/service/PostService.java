@@ -7,7 +7,7 @@ import com.example.snsserver.domain.post.repository.PostRepository;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.post.entity.Post;
 import com.example.snsserver.dto.auth.request.PageRequestDto;
-import com.example.snsserver.dto.auth.response.PagedResponseDto;
+import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.post.request.PostRequestDto;
 import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
@@ -59,13 +59,13 @@ public class PostService extends BaseImageService {
     }
 
     @Transactional(readOnly = true)
-    public PagedResponseDto<PostResponseDto> getAllPosts(PageRequestDto pageRequestDto) {
+    public PageResponseDto<PostResponseDto> getAllPosts(PageRequestDto pageRequestDto) {
         Page<Post> postPage = postRepository.findAll(
                 pageRequestDto.toPageableWithSort("createdAt", Sort.Direction.DESC));
         Page<PostResponseDto> postResponsePage = postPage.map(this::mapToResponseDto);
 
         log.info("Fetched {} posts", postResponsePage.getTotalElements());
-        return PagedResponseDto.from(postResponsePage);
+        return PageResponseDto.from(postResponsePage);
     }
 
     @Transactional(readOnly = true)

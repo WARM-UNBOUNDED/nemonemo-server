@@ -1,7 +1,7 @@
 package com.example.snsserver.controller;
 
 import com.example.snsserver.dto.auth.request.PageRequestDto;
-import com.example.snsserver.dto.auth.response.PagedResponseDto;
+import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.comment.request.CommentRequestDto;
 import com.example.snsserver.dto.comment.response.CommentResponseDto;
 import com.example.snsserver.domain.comment.service.CommentService;
@@ -44,7 +44,7 @@ public class CommentController {
             @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공"),
             @ApiResponse(responseCode = "404", description = "게시물 없음")
     })
-    public ResponseEntity<PagedResponseDto<CommentResponseDto>> getCommentsByPost(
+    public ResponseEntity<PageResponseDto<CommentResponseDto>> getCommentsByPost(
             @Parameter(description = "조회할 게시물 ID", required = true, example = "1")
             @PathVariable Long postId,
             @Parameter(description = "페이지 요청 정보 (page, size)", required = true)

@@ -6,7 +6,7 @@ import com.example.snsserver.domain.comment.entity.Comment;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.post.entity.Post;
 import com.example.snsserver.dto.auth.request.PageRequestDto;
-import com.example.snsserver.dto.auth.response.PagedResponseDto;
+import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.comment.request.CommentRequestDto;
 import com.example.snsserver.dto.comment.response.CommentResponseDto;
 import com.example.snsserver.domain.auth.service.MemberService;
@@ -52,7 +52,7 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
-    public PagedResponseDto<CommentResponseDto> getCommentsByPost(Long postId, PageRequestDto pageRequestDto) {
+    public PageResponseDto<CommentResponseDto> getCommentsByPost(Long postId, PageRequestDto pageRequestDto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
 
@@ -61,7 +61,7 @@ public class CommentService {
         Page<CommentResponseDto> commentResponsePage = commentPage.map(this::mapToResponseDto);
 
         log.info("Fetched {} comments for post {}", commentResponsePage.getTotalElements(), postId);
-        return PagedResponseDto.from(commentResponsePage);
+        return PageResponseDto.from(commentResponsePage);
     }
 
     private CommentResponseDto mapToResponseDto(Comment comment) {
