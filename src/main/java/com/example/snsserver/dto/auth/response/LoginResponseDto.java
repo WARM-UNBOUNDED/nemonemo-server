@@ -6,5 +6,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class LoginResponseDto {
-    private TokenDto tokenDto; // JWT 관련 데이터
+    private TokenDto tokenDto;
 }
