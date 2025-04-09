@@ -13,7 +13,6 @@ import com.example.snsserver.dto.post.request.SearchPostRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
 import com.example.snsserver.dto.post.response.SearchPostResponseDto;
 import com.example.snsserver.domain.auth.service.MemberService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,12 +37,7 @@ public class PostService extends BaseImageService {
 
     @Transactional
     public PostResponseDto createPost(PostRequestDto requestDto, MultipartFile file) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberService.getMemberByUsername(username);
-        if (member == null) {
-            throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username);
-        }
-
+        Member member = getCurrentMember();
         String filePath = uploadImage(file, "post");
 
         Post post = Post.builder()
@@ -51,7 +45,6 @@ public class PostService extends BaseImageService {
                 .content(requestDto.getContent())
                 .filePath(filePath)
                 .member(member)
-                .createdAt(LocalDateTime.now())
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -62,53 +55,32 @@ public class PostService extends BaseImageService {
     public PageResponseDto<PostResponseDto> getAllPosts(PageRequestDto pageRequestDto) {
         Page<Post> postPage = postRepository.findAll(
                 pageRequestDto.toPageableWithSort("createdAt", Sort.Direction.DESC));
-        Page<PostResponseDto> postResponsePage = postPage.map(this::mapToResponseDto);
-
-        log.info("Fetched {} posts", postResponsePage.getTotalElements());
-        return PageResponseDto.from(postResponsePage);
+        return PageResponseDto.from(postPage.map(this::mapToResponseDto));
     }
 
     @Transactional(readOnly = true)
     public PostResponseDto getPost(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
+        Post post = findPostById(postId);
         return mapToResponseDto(post);
     }
 
     @Transactional(readOnly = true)
     public SearchPostResponseDto searchPosts(SearchPostRequestDto requestDto) {
-        log.info("Searching posts with keyword: {}, page: {}, size: {}",
-                requestDto.getKeyword(), requestDto.getPage(), requestDto.getSize());
-
         PageRequest pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize(),
                 Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<Post> spec = SearchUtils.buildTitleSearchSpecification(requestDto.getKeyword());
-
         Page<Post> postPage = postRepository.findAll(spec, pageable);
 
-        Page<PostResponseDto> postResponsePage = postPage.map(this::mapToResponseDto);
-
-        log.info("Found {} posts matching keyword: {}", postResponsePage.getTotalElements(), requestDto.getKeyword());
-        return SearchPostResponseDto.from(postResponsePage);
+        return SearchPostResponseDto.from(postPage.map(this::mapToResponseDto));
     }
 
     @Transactional
     public PostResponseDto updatePost(Long postId, PostRequestDto requestDto, MultipartFile file) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
+        Post post = findPostById(postId);
+        validatePostOwner(post);
 
-        if (!post.getMember().getUsername().equals(username)) {
-            throw new SecurityException("본인의 게시물만 수정할 수 있습니다.");
-        }
-
-        String filePath = post.getFilePath();
-        if (file != null && !file.isEmpty()) {
-            deleteImage(filePath);
-            filePath = uploadImage(file, "post");
-        }
-
+        String filePath = handleFileUpdate(post.getFilePath(), file);
         post = post.toBuilder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
@@ -121,13 +93,8 @@ public class PostService extends BaseImageService {
 
     @Transactional
     public void deletePost(Long postId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
-
-        if (!post.getMember().getUsername().equals(username)) {
-            throw new SecurityException("본인의 게시물만 삭제할 수 있습니다.");
-        }
+        Post post = findPostById(postId);
+        validatePostOwner(post);
 
         deleteImage(post.getFilePath());
         postRepository.delete(post);
@@ -142,12 +109,36 @@ public class PostService extends BaseImageService {
                 .username(post.getMember().getUsername())
                 .createdAt(post.getCreatedAt())
                 .likeCount(likeRepository.countByPostId(post.getId()))
-                .commentCount(post.getComments() != null ? post.getComments().size() : 0)
+                .commentCount(post.getComments().size())
                 .build();
     }
 
-    @PostConstruct
-    public void init() {
-        log.info("Java temp directory: {}", System.getProperty("java.io.tmpdir"));
+    private Member getCurrentMember() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberService.getMemberByUsername(username);
+        if (member == null) {
+            throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username);
+        }
+        return member;
+    }
+
+    private Post findPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시물이 존재하지 않습니다."));
+    }
+
+    private void validatePostOwner(Post post) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!post.getMember().getUsername().equals(username)) {
+            throw new SecurityException("본인의 게시물만 수정/삭제할 수 있습니다.");
+        }
+    }
+
+    private String handleFileUpdate(String existingFilePath, MultipartFile file) {
+        if (file != null && !file.isEmpty()) {
+            deleteImage(existingFilePath);
+            return uploadImage(file, "post");
+        }
+        return existingFilePath;
     }
 }
