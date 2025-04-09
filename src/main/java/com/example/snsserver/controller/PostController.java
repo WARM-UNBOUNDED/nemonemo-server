@@ -36,28 +36,11 @@ public class PostController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
-    @Operation(
-            summary = "게시물 생성 (파일 포함) ",
-            description = "JSON 형식의 게시물 데이터와 함께 선택적으로 파일을 업로드하여 새 게시물을 생성합니다. (postman 테스트용)",
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "게시물 생성 성공", content = @Content(schema = @Schema(implementation = PostResponseDto.class))),
-                    @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
-                    @ApiResponse(responseCode = "401", description = "인증 실패"),
-                    @ApiResponse(responseCode = "415", description = "지원되지 않는 미디어 타입")
-            }
-    )
+    @Operation(summary = "게시물 생성 (파일 포함)", description = "JSON 형식의 게시물 데이터와 함께 선택적으로 파일을 업로드하여 새 게시물을 생성합니다.")
     public ResponseEntity<PostResponseDto> createPost(
-            @RequestPart(name = "post", required = true)
-            @Valid
-            @Schema(description = "게시물 데이터 (JSON)", example = "{\"title\": \"Test Title\", \"content\": \"Test Content\"}", implementation = PostRequestDto.class, contentMediaType = "application/json")
-            PostRequestDto requestDto,
-            @RequestPart(name = "file", required = false)
-            @Schema(description = "업로드할 파일 (선택적)", type = "string", format = "binary")
-            MultipartFile file) throws IOException {
-        log.debug("Received post data: {}", requestDto);
-        log.debug("Received file: {}", file != null ? file.getOriginalFilename() : "none");
-        PostResponseDto responseDto = postService.createPost(requestDto, file);
-        return ResponseEntity.ok(responseDto);
+            @RequestPart(name = "post") @Valid PostRequestDto requestDto,
+            @RequestPart(name = "file", required = false) MultipartFile file) throws IOException {
+        return ResponseEntity.ok(postService.createPost(requestDto, file));
     }
 
     @PostMapping(value = "/json", consumes = MediaType.APPLICATION_JSON_VALUE)
