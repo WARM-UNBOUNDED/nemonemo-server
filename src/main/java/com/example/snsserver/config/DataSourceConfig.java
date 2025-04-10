@@ -21,7 +21,7 @@ public class DataSourceConfig {
 
     private final String password;
 
-    public DataSourceConfig(@Value("${dbPassword}") String password) {
+    public DataSourceConfig(@Value("${db.password}") String password) {
         this.password = password;
     }
 
