@@ -26,6 +26,8 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/sns-app:latest
+          build-args: |
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.10
@@ -36,5 +38,5 @@ jobs:
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/sns-app:latest
             docker-compose -f ~/sns/docker-compose.yml down
+            docker-compose -f ~/sns/docker-compose.yml up -d --build
             docker-compose -f ~/sns/docker-compose.yml up -d
-    
