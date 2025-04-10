@@ -32,11 +32,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PostService extends BaseImageService {
+public class PostService {
 
     private final PostRepository postRepository;
     private final MemberService memberService;
     private final LikeRepository likeRepository;
+    private final BaseImageService baseImageService; // 조합 방식으로 주입
 
     @Transactional
     public PostResponseDto createPost(PostRequestDto requestDto, MultipartFile file) {
@@ -46,14 +47,14 @@ public class PostService extends BaseImageService {
             throw new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username);
         }
 
-        String filePath = uploadImage(file, "post");
+        String filePath = baseImageService.uploadImage(file, "post");
 
         Post post = Post.builder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
                 .filePath(filePath)
                 .member(member)
-                .createdAt(LocalDateTime.now()) // 직접 설정
+                .createdAt(LocalDateTime.now())
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -127,7 +128,7 @@ public class PostService extends BaseImageService {
             throw new SecurityException("본인의 게시물만 삭제할 수 있습니다.");
         }
 
-        deleteImage(post.getFilePath());
+        baseImageService.deleteImage(post.getFilePath());
         postRepository.delete(post);
     }
 
@@ -168,8 +169,8 @@ public class PostService extends BaseImageService {
 
     private String handleFileUpdate(String existingFilePath, MultipartFile file) {
         if (file != null && !file.isEmpty()) {
-            deleteImage(existingFilePath);
-            return uploadImage(file, "post");
+            baseImageService.deleteImage(existingFilePath);
+            return baseImageService.uploadImage(file, "post");
         }
         return existingFilePath;
     }

@@ -6,7 +6,6 @@ import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.dto.auth.response.MemberResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,9 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
-public class MemberService extends BaseImageService {
+public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final BaseImageService baseImageService; // 조합 방식으로 주입
 
     @Transactional(readOnly = true)
     public MemberResponseDto getMyInfo() {
@@ -43,9 +43,10 @@ public class MemberService extends BaseImageService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = getMemberByUsername(username);
 
-        deleteImage(member.getProfileImagePath());
+        // BaseImageService를 통해 이미지 삭제 및 업로드
+        baseImageService.deleteImage(member.getProfileImagePath());
 
-        String profileImagePath = uploadImage(file, "profile");
+        String profileImagePath = baseImageService.uploadImage(file, "profile");
         member.updateProfileImage(profileImagePath);
 
         memberRepository.save(member);
