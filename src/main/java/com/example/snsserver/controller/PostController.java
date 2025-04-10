@@ -126,8 +126,6 @@ public class PostController {
             @RequestPart(name = "file", required = false)
             @Schema(description = "업로드할 파일 (선택적)", type = "string", format = "binary")
             MultipartFile file) throws IOException {
-        log.debug("Received updatePost request - postId: {}, post: {}, file: {}",
-                postId, requestDto, file != null ? file.getOriginalFilename() : "none");
         return ResponseEntity.ok(postService.updatePost(postId, requestDto, file));
     }
 
