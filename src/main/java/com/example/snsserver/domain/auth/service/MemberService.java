@@ -5,6 +5,7 @@ import com.example.snsserver.domain.auth.repository.MemberRepository;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.dto.auth.response.MemberResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,20 +20,19 @@ public class MemberService extends BaseImageService {
 
     @Transactional(readOnly = true)
     public MemberResponseDto getMyInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = memberRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("로그인 유저 정보가 없습니다."));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = getMemberByUsername(username);
         return new MemberResponseDto(member);
     }
 
     @Transactional(readOnly = true)
     public MemberResponseDto getMemberInfo(String username) {
-        Member member = memberRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("유저 정보가 없습니다."));
+        Member member = getMemberByUsername(username);
         return new MemberResponseDto(member);
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "members", key = "#username")
     public Member getMemberByUsername(String username) {
         return memberRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("유저 정보가 없습니다."));
@@ -40,9 +40,8 @@ public class MemberService extends BaseImageService {
 
     @Transactional
     public MemberResponseDto updateProfileImage(MultipartFile file) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Member member = memberRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("로그인 유저 정보가 없습니다."));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = getMemberByUsername(username);
 
         deleteImage(member.getProfileImagePath());
 
