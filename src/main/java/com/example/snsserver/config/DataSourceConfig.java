@@ -21,8 +21,8 @@ public class DataSourceConfig {
 
     private final String password;
 
-    public DataSourceConfig(@Value("${db.password}") String password) {
-        this.password = password;
+    public DataSourceConfig(SecretsManagerConfig secretsManagerConfig) {
+        this.password = secretsManagerConfig.dbPassword();
     }
 
     @Bean
