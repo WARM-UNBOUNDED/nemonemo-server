@@ -30,7 +30,7 @@ public class SecretsManagerConfig {
         try {
             ObjectMapper mapper = new ObjectMapper();
             var secretMap = mapper.readValue(secret, java.util.Map.class);
-            return (String) secretMap.get("password");
+            return (String) secretMap.get("DB_PASSWORD");
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse secret: " + e.getMessage(), e);
         }
