@@ -1,4 +1,8 @@
 spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterAccess=600s
   datasource:
     url: jdbc:mysql://database-2.c186ei0q4wh2.ap-northeast-2.rds.amazonaws.com:3306/snsserver?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -25,10 +29,12 @@ jwt:
 
 logging:
   level:
-    org.hibernate.SQL: debug
-    org.hibernate.type: trace
-    com.example.snsserver: debug
-    org.springframework.security: DEBUG
+    root: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type: INFO
+    com.example.snsserver: INFO
+    org.springframework.security: INFO
+    com.example.snsserver.controller: DEBUG  # 모든 API 요청에 대한 로그 활성화
 
 server:
   port: 8081
