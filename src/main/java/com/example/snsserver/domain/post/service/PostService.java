@@ -37,7 +37,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final MemberService memberService;
     private final LikeRepository likeRepository;
-    private final BaseImageService baseImageService; // 조합 방식으로 주입
+    private final BaseImageService baseImageService;
 
     @Transactional
     public PostResponseDto createPost(PostRequestDto requestDto, MultipartFile file) {

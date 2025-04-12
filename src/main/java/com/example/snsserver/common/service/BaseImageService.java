@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class BaseImageService { // abstract 제거
+public class BaseImageService {
 
     private final S3Client s3Client;
 
@@ -26,7 +26,7 @@ public class BaseImageService { // abstract 제거
         this.s3Client = s3Client;
     }
 
-    public String uploadImage(MultipartFile file, String subDir) { // protected -> public
+    public String uploadImage(MultipartFile file, String subDir) {
         if (file == null || file.isEmpty()) {
             log.debug("No file provided for upload");
             return null;
@@ -51,7 +51,7 @@ public class BaseImageService { // abstract 제거
         }
     }
 
-    public void deleteImage(String fileUrl) { // protected -> public
+    public void deleteImage(String fileUrl) {
         if (fileUrl == null) {
             return;
         }

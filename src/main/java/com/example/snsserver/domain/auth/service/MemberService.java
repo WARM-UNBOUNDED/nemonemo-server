@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final BaseImageService baseImageService; // 조합 방식으로 주입
+    private final BaseImageService baseImageService;
 
     @Transactional(readOnly = true)
     public MemberResponseDto getMyInfo() {
@@ -43,7 +43,6 @@ public class MemberService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = getMemberByUsername(username);
 
-        // BaseImageService를 통해 이미지 삭제 및 업로드
         baseImageService.deleteImage(member.getProfileImagePath());
 
         String profileImagePath = baseImageService.uploadImage(file, "profile");
