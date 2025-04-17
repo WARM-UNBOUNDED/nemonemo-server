@@ -26,8 +26,8 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        // Swagger 관련 경로를 필터링에서 제외
         String path = request.getRequestURI();
+        log.info("Processing request: {}", path); // 요청 경로 로깅
         if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
             log.debug("Swagger 경로 요청: {}, JWT 필터링 제외", path);
             filterChain.doFilter(request, response);
@@ -35,14 +35,15 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         String token = resolveToken(request);
+        log.info("Extracted token: {}", token); // 토큰 로깅
         if (token != null) {
             try {
+                log.info("Validating token...");
                 if (jwtTokenManager.validateToken(token)) {
+                    log.info("Token is valid, getting authentication...");
                     Authentication authentication = tokenService.getAuthentication(token);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     log.debug("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
-                    log.info("Authentication authorities: {}", authentication.getAuthorities());
-                    log.info("SecurityContext authentication: {}", SecurityContextHolder.getContext().getAuthentication());
                 }
             } catch (ExpiredJwtException e) {
                 log.warn("Token has expired: {}", e.getMessage());
@@ -50,11 +51,13 @@ public class JWTFilter extends OncePerRequestFilter {
                 response.getWriter().write("Token has expired");
                 return;
             } catch (Exception e) {
-                log.error("Authentication failed: {}", e.getMessage());
+                log.error("Authentication failed: {}", e.getMessage(), e); // 스택 트레이스 포함
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid token");
                 return;
             }
+        } else {
+            log.warn("No token provided for path: {}", path);
         }
         filterChain.doFilter(request, response);
     }
