@@ -39,7 +39,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/api/follows/**", "/api/search/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/posts/**", "/api/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**", "/api/comments/**", "/api/members/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/**", "/api/comments/**", "/api/likes/**", "/api/follows/**", "/api/search/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )
