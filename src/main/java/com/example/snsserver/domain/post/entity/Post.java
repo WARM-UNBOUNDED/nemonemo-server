@@ -3,6 +3,7 @@ package com.example.snsserver.domain.post.entity;
 import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.comment.entity.Comment;
 import com.example.snsserver.domain.like.entity.Like;
+import com.example.snsserver.domain.post.entity.tag.PostTag;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,4 +44,8 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PostTag> postTags = new ArrayList<>();
 }
