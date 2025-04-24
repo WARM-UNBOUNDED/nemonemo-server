@@ -4,6 +4,7 @@ import com.example.snsserver.dto.auth.request.PageRequestDto;
 import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.post.request.PostRequestDto;
 import com.example.snsserver.dto.post.request.SearchPostRequestDto;
+import com.example.snsserver.dto.post.request.SearchPostByTagRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
 import com.example.snsserver.dto.post.response.SearchPostResponseDto;
 import com.example.snsserver.domain.post.service.PostService;
@@ -56,7 +57,7 @@ public class PostController {
     )
     public ResponseEntity<PostResponseDto> createPostJson(
             @RequestBody @Valid
-            @Schema(description = "게시물 데이터", example = "{\"title\": \"Test Title\", \"content\": \"Test Content\"}")
+            @Schema(description = "게시물 데이터", example = "{\"title\": \"Test Title\", \"content\": \"Test Content\", \"tags\": [\"tag1\", \"tag2\"]}")
             PostRequestDto requestDto) {
         log.info("Received createPostJson request - title: {}", requestDto.getTitle());
         PostResponseDto responseDto = postService.createPost(requestDto, null);
@@ -106,6 +107,20 @@ public class PostController {
         return ResponseEntity.ok(postService.searchPosts(requestDto));
     }
 
+    @GetMapping("/search-tag")
+    @Operation(
+            summary = "태그 검색",
+            description = "태그로 게시물을 검색합니다. 페이지네이션 지원 (기본값: page=0, size=10).",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "검색 결과 반환", content = @Content(schema = @Schema(implementation = SearchPostResponseDto.class))),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터")
+            }
+    )
+    public ResponseEntity<SearchPostResponseDto> searchPostsByTag(
+            @Valid @ModelAttribute SearchPostByTagRequestDto requestDto) {
+        return ResponseEntity.ok(postService.searchPostsByTag(requestDto));
+    }
+
     @PutMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("isAuthenticated()")
     @Operation(
@@ -121,7 +136,7 @@ public class PostController {
             @PathVariable Long postId,
             @RequestPart(name = "post", required = true)
             @Valid
-            @Schema(description = "수정할 게시물 데이터 (JSON)", example = "{\"title\": \"Updated Title\", \"content\": \"Updated Content\"}", implementation = PostRequestDto.class, contentMediaType = "application/json")
+            @Schema(description = "수정할 게시물 데이터 (JSON)", example = "{\"title\": \"Updated Title\", \"content\": \"Updated Content\", \"tags\": [\"tag1\", \"tag2\"]}", implementation = PostRequestDto.class, contentMediaType = "application/json")
             PostRequestDto requestDto,
             @RequestPart(name = "file", required = false)
             @Schema(description = "업로드할 파일 (선택적)", type = "string", format = "binary")
@@ -144,7 +159,7 @@ public class PostController {
     public ResponseEntity<PostResponseDto> updatePostJson(
             @PathVariable Long postId,
             @RequestBody @Valid
-            @Schema(description = "수정할 게시물 데이터", example = "{\"title\": \"Updated Title\", \"content\": \"Updated Content\"}")
+            @Schema(description = "수정할 게시물 데이터", example = "{\"title\": \"Updated Title\", \"content\": \"Updated Content\", \"tags\": [\"tag1\", \"tag2\"]}")
             PostRequestDto requestDto) {
         log.info("Received updatePostJson request - postId: {}, title: {}", postId, requestDto.getTitle());
         return ResponseEntity.ok(postService.updatePost(postId, requestDto, null));
