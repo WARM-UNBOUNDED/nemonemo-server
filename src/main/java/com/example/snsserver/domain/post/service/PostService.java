@@ -3,13 +3,17 @@ package com.example.snsserver.domain.post.service;
 import com.example.snsserver.common.service.BaseImageService;
 import com.example.snsserver.common.service.SearchUtils;
 import com.example.snsserver.domain.like.repository.LikeRepository;
-import com.example.snsserver.domain.post.repository.PostRepository;
-import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.domain.post.entity.Post;
+import com.example.snsserver.domain.post.entity.tag.PostTag;
+import com.example.snsserver.domain.post.entity.tag.Tag;
+import com.example.snsserver.domain.post.repository.PostRepository;
+import com.example.snsserver.domain.post.repository.tag.TagRepository;
+import com.example.snsserver.domain.auth.entity.Member;
 import com.example.snsserver.dto.auth.request.PageRequestDto;
 import com.example.snsserver.dto.auth.response.PageResponseDto;
 import com.example.snsserver.dto.post.request.PostRequestDto;
 import com.example.snsserver.dto.post.request.SearchPostRequestDto;
+import com.example.snsserver.dto.post.request.SearchPostByTagRequestDto;
 import com.example.snsserver.dto.post.response.PostResponseDto;
 import com.example.snsserver.dto.post.response.SearchPostResponseDto;
 import com.example.snsserver.domain.auth.service.MemberService;
@@ -35,6 +39,7 @@ import java.util.stream.Collectors;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final TagRepository tagRepository;
     private final MemberService memberService;
     private final LikeRepository likeRepository;
     private final BaseImageService baseImageService;
@@ -58,6 +63,7 @@ public class PostService {
                 .build();
 
         Post savedPost = postRepository.save(post);
+        addTagsToPost(savedPost, requestDto.getTags()); // 태그 추가
         return mapToResponseDto(savedPost);
     }
 
@@ -99,6 +105,29 @@ public class PostService {
         return SearchPostResponseDto.from(postResponsePage);
     }
 
+    @Transactional(readOnly = true)
+    public SearchPostResponseDto searchPostsByTag(SearchPostByTagRequestDto requestDto) {
+        log.info("Searching posts with tag: {}, page: {}, size: {}",
+                requestDto.getTag(), requestDto.getPage(), requestDto.getSize());
+
+        PageRequest pageable = PageRequest.of(requestDto.getPage(), requestDto.getSize(),
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Tag tag = tagRepository.findByName(requestDto.getTag())
+                .orElseThrow(() -> new IllegalArgumentException("태그를 찾을 수 없습니다: " + requestDto.getTag()));
+
+        Page<Post> postPage = postRepository.findAll((root, query, cb) -> {
+            return cb.equal(root.join("postTags").get("tag"), tag);
+        }, pageable);
+
+        List<Post> posts = postPage.getContent();
+        Map<Long, Long> likeCounts = getLikeCounts(posts);
+        Page<PostResponseDto> postResponsePage = postPage.map(post -> mapToResponseDto(post, likeCounts));
+
+        log.info("Found {} posts with tag: {}", postResponsePage.getTotalElements(), requestDto.getTag());
+        return SearchPostResponseDto.from(postResponsePage);
+    }
+
     @Transactional
     public PostResponseDto updatePost(Long postId, PostRequestDto requestDto, MultipartFile file) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -109,6 +138,7 @@ public class PostService {
         }
 
         String filePath = handleFileUpdate(post.getFilePath(), file);
+        post.getPostTags().clear(); // 기존 태그 삭제
         post = post.toBuilder()
                 .title(requestDto.getTitle())
                 .content(requestDto.getContent())
@@ -116,6 +146,7 @@ public class PostService {
                 .build();
 
         postRepository.save(post);
+        addTagsToPost(post, requestDto.getTags()); // 새 태그 추가
         return mapToResponseDto(post);
     }
 
@@ -133,6 +164,10 @@ public class PostService {
     }
 
     private PostResponseDto mapToResponseDto(Post post) {
+        List<String> tags = post.getPostTags().stream()
+                .map(postTag -> postTag.getTag().getName())
+                .collect(Collectors.toList());
+
         return PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -142,10 +177,15 @@ public class PostService {
                 .createdAt(post.getCreatedAt())
                 .likeCount(likeRepository.countByPostId(post.getId()))
                 .commentCount(post.getComments().size())
+                .tags(tags) // 태그 추가
                 .build();
     }
 
     private PostResponseDto mapToResponseDto(Post post, Map<Long, Long> likeCounts) {
+        List<String> tags = post.getPostTags().stream()
+                .map(postTag -> postTag.getTag().getName())
+                .collect(Collectors.toList());
+
         return PostResponseDto.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -155,6 +195,7 @@ public class PostService {
                 .createdAt(post.getCreatedAt())
                 .likeCount(likeCounts.getOrDefault(post.getId(), 0L))
                 .commentCount(post.getComments().size())
+                .tags(tags) // 태그 추가
                 .build();
     }
 
@@ -173,5 +214,33 @@ public class PostService {
             return baseImageService.uploadImage(file, "post");
         }
         return existingFilePath;
+    }
+
+    private void addTagsToPost(Post post, List<String> tagNames) {
+        if (tagNames == null) {
+            return;
+        }
+
+        for (String tagName : tagNames) {
+            if (tagName == null || tagName.trim().isEmpty()) {
+                continue;
+            }
+
+            Tag tag = tagRepository.findByName(tagName)
+                    .orElseGet(() -> {
+                        Tag newTag = Tag.builder()
+                                .name(tagName)
+                                .build();
+                        return tagRepository.save(newTag);
+                    });
+
+            PostTag postTag = PostTag.builder()
+                    .post(post)
+                    .tag(tag)
+                    .build();
+
+            post.getPostTags().add(postTag);
+            tag.getPostTags().add(postTag);
+        }
     }
 }
